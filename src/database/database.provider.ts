@@ -18,7 +18,10 @@ export const databaseProviders: Provider[] = [
     inject: [SEQUELIZE],
     useFactory: async (db: Sequelize) => {
       const models = initModels(db);
-      await db.sync();
+      const shouldSync = process.env.DB_SYNC === 'true';
+      if (shouldSync) {
+        await db.sync();
+      }
       return models;
     },
   },
