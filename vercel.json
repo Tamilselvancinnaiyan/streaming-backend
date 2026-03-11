@@ -1,7 +1,7 @@
 {
   "functions": {
     "api/main.ts": {
-      "maxDuration": 10
+      "maxDuration": 60
     }
   },
   "routes": [

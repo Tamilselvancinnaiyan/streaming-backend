@@ -3,10 +3,9 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import serverless from 'serverless-http';
-import express, { Request, Response } from 'express';
+import express, { Express, Request, Response } from 'express';
 
-let cachedServer: ReturnType<typeof serverless>;
+let cachedExpressApp: Express | undefined;
 const startedAt = new Date().toISOString();
 
 function getAllowedOrigins() {
@@ -54,13 +53,13 @@ async function bootstrapServer() {
 
   await app.init();
 
-  return serverless(expressApp);
+  return expressApp;
 }
 
 export default async function handler(req: Request, res: Response) {
-  if (!cachedServer) {
-    cachedServer = await bootstrapServer();
+  if (!cachedExpressApp) {
+    cachedExpressApp = await bootstrapServer();
   }
 
-  return cachedServer(req, res);
+  return cachedExpressApp(req, res);
 }
