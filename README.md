@@ -1,18 +1,12 @@
-# LiveKit Streaming Platform Setup
+# LiveKit Backend (Simple Auth + Token API)
 
-This repository now contains:
-- NestJS backend in the project root.
-- Next.js dashboard UI in `/nextjs-dashboard`.
-- PostgreSQL table schema in `/database/schema.sql`.
+This backend is simplified to:
+- `users` and `streams` tables
+- login flow APIs
+- LiveKit token generation API
+- basic stream lifecycle APIs
 
-## 1) What `index.js` was doing before
-
-The old `index.js` only handled `GET /token` and generated a LiveKit JWT.
-It did **not** store streams, users, chat messages, viewer joins, or analytics in DB.
-
-## 2) Backend (NestJS)
-
-### Run
+## Setup
 
 ```bash
 cp .env.example .env
@@ -20,55 +14,42 @@ npm install
 npm run dev
 ```
 
-### Core endpoints
+## Database
 
-- `GET /token?room=<room>&role=host|viewer&identity=<id>`
-- `GET /live-sessions`
-- `POST /streams`
-- `PATCH /streams/:id/start`
-- `PATCH /streams/:id/stop`
-- `POST /streams/:id/join`
-- `PATCH /streams/:id/leave?identity=<identity>`
-- `GET /streams/:id/chat`
-- `POST /streams/:id/chat`
-- `POST /streams/:id/host-control`
-- `GET /analytics/overview`
+Run schema:
 
-### DB config file used
-
-- `/src/config/database.config.js` (same structure you requested)
-
-## 3) Frontend (Next.js dashboard)
-
-```bash
-cd nextjs-dashboard
-npm install
-npm run dev
+```sql
+-- file: database/schema.sql
 ```
 
-Pages implemented:
-- `/` Live Sessions Dashboard
-- `/live/[id]` Viewer page with chat panel
-- `/studio` Host Studio
-- `/create-stream` Create Stream form
-- `/analytics` Analytics cards
-
-Set backend URL in frontend:
-
-```bash
-NEXT_PUBLIC_API_BASE=http://localhost:3000
-```
-
-## 4) Database tables
-
-SQL DDL is available at:
-- `/database/schema.sql`
-
-Tables:
+Tables created:
 - `users`
+  - `id`, `name`, `email`, `password_hash`, `role`, `last_login_at`, `created_at`, `updated_at`
 - `streams`
-- `stream_participants`
-- `chat_messages`
-- `stream_events`
-- `follows`
-# streaming-backend
+  - `id`, `host_user_id`, `room_id`, `title`, `category`, `status`, `started_at`, `ended_at`, `created_at`, `updated_at`
+
+## APIs
+
+### Auth
+- `POST /auth/register`
+  - body: `{ "name": "Tom", "email": "tom@x.com", "password": "secret123", "role": "viewer" }`
+- `POST /auth/login`
+  - body: `{ "email": "tom@x.com", "password": "secret123" }`
+- `GET /auth/me`
+  - header: `Authorization: Bearer <token>`
+
+### LiveKit
+- `GET /token?room=my-room&role=host|viewer&identity=user_1`
+
+### Streams
+- `POST /streams/start`
+  - body: `{ "hostUserId": "<uuid>", "title": "My stream", "category": "general" }`
+  - creates stream record and random `room_id`
+- `PATCH /streams/:id/stop`
+  - sets `ended_at` to current time and status to `ended`
+- `GET /streams/reconcile`
+  - returns records where `ended_at IS NULL OR ended_at <= NOW()`
+
+## Notes
+- Passwords are hashed with `scrypt`.
+- Auth token is HMAC-signed and expires in 7 days.
