@@ -27,8 +27,8 @@ export class StreamsService {
     const roomId = this.generateRoomId();
 
     const stream = await this.models.Stream.create({
-      hostUserId: dto.hostUserId,
-      roomId,
+      host_id: dto.hostUserId,
+      room_name: roomId,
       title: dto.title,
       category: dto.category ?? 'general',
       status: 'live',

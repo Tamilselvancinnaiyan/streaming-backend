@@ -12,4 +12,10 @@ export class StartStreamDto {
   @IsString()
   @MaxLength(120)
   category?: string;
+
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  description?: string;
 }

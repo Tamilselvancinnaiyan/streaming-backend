@@ -103,7 +103,7 @@ export class AuthService {
     const user = await this.models.User.create({
       name: input.name.trim(),
       email,
-      passwordHash: this.hashPassword(input.password),
+      password_hash: await this.hashPassword(input.password),
       role: input.role ?? 'viewer',
     });
 
@@ -122,8 +122,8 @@ export class AuthService {
   async login(input: { email: string; password: string }) {
     const email = input.email.trim().toLowerCase();
     const user = await this.models.User.findOne({ where: { email } });
-
-    if (!user || !this.verifyPassword(input.password, String(user.get('passwordHash')))) {
+const passwordHash = user?.get('password_hash');
+    if (!user || !this.verifyPassword(input.password, String(passwordHash))) {
       throw new UnauthorizedException('invalid email or password');
     }
 

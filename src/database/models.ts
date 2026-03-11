@@ -23,7 +23,7 @@ export function initModels(sequelize: Sequelize) {
           isEmail: true,
         },
       },
-      passwordHash: {
+      password_hash: {
         type: DataTypes.STRING(255),
         allowNull: false,
       },
@@ -31,10 +31,6 @@ export function initModels(sequelize: Sequelize) {
         type: DataTypes.ENUM('viewer', 'host', 'admin'),
         allowNull: false,
         defaultValue: 'viewer',
-      },
-      lastLoginAt: {
-        type: DataTypes.DATE,
-        allowNull: true,
       },
     },
     { tableName: 'users', underscored: true, timestamps: true },
@@ -48,11 +44,11 @@ export function initModels(sequelize: Sequelize) {
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
-      hostUserId: {
+      host_id: {
         type: DataTypes.UUID,
         allowNull: false,
       },
-      roomId: {
+      room_name: {
         type: DataTypes.STRING(64),
         allowNull: false,
         unique: true,
@@ -84,8 +80,8 @@ export function initModels(sequelize: Sequelize) {
     { tableName: 'streams', underscored: true, timestamps: true },
   );
 
-  User.hasMany(Stream, { foreignKey: 'hostUserId', as: 'streams' });
-  Stream.belongsTo(User, { foreignKey: 'hostUserId', as: 'host' });
+  User.hasMany(Stream, { foreignKey: 'host_id', as: 'streams' });
+  Stream.belongsTo(User, { foreignKey: 'host_id', as: 'host' });
 
   return { User, Stream };
 }
