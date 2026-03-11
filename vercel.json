@@ -1,13 +1,13 @@
 {
   "functions": {
-    "api/index.ts": {
+    "api/main.ts": {
       "maxDuration": 10
     }
   },
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/api/index.ts"
+      "dest": "/api/main.ts"
     }
   ]
 }
