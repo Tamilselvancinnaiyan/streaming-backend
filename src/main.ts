@@ -7,6 +7,7 @@ import type { INestApplication } from '@nestjs/common';
 import type { Request, Response } from 'express';
 
 let cachedServer: ReturnType<typeof serverless> | undefined;
+const startedAt = new Date().toISOString();
 
 function getAllowedOrigins() {
   const allowedOrigins = [
@@ -37,9 +38,23 @@ function configureApp(app: INestApplication) {
   );
 }
 
+function registerHeartbeatRoute(app: INestApplication) {
+  const expressApp = app.getHttpAdapter().getInstance();
+  expressApp.get('/', (_req: Request, res: Response) => {
+    res.status(200).json({
+      event: 'heartbeat',
+      status: 'ok',
+      port: Number(process.env.PORT || 3000),
+      startedAt,
+      timestamp: new Date().toISOString(),
+    });
+  });
+}
+
 async function bootstrapServerless() {
   const app = await NestFactory.create(AppModule);
   configureApp(app);
+  registerHeartbeatRoute(app);
 
   await app.init();
 
@@ -59,6 +74,7 @@ export default async function handler(req: Request, res: Response) {
 async function bootstrapLocal() {
   const app = await NestFactory.create(AppModule);
   configureApp(app);
+  registerHeartbeatRoute(app);
   const port = Number(process.env.PORT || 3000);
   await app.listen(port);
   console.log(`LiveKit Nest backend running on http://localhost:${port}`);
