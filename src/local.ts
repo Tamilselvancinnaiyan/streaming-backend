@@ -2,11 +2,8 @@ import 'reflect-metadata';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ExpressAdapter } from '@nestjs/platform-express';
-import serverless from 'serverless-http';
-import express, { Request, Response } from 'express';
+import { Request, Response } from 'express';
 
-let cachedServer: ReturnType<typeof serverless>;
 const startedAt = new Date().toISOString();
 
 function getAllowedOrigins() {
@@ -14,20 +11,15 @@ function getAllowedOrigins() {
     'http://localhost:3001',
     'https://streaming-frontend-five.vercel.app',
     ...(process.env.CORS_ORIGINS
-      ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
+      ? process.env.CORS_ORIGINS.split(',').map((origin) => origin.trim())
       : []),
   ];
 
   return [...new Set(allowedOrigins.filter(Boolean))];
 }
 
-async function bootstrapServer() {
-  const expressApp = express();
-
-  const app = await NestFactory.create(
-    AppModule,
-    new ExpressAdapter(expressApp),
-  );
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
 
   app.enableCors({
     origin: getAllowedOrigins(),
@@ -44,6 +36,8 @@ async function bootstrapServer() {
     }),
   );
 
+  const expressApp = app.getHttpAdapter().getInstance();
+
   expressApp.get('/', (_req: Request, res: Response) => {
     res.json({
       status: 'ok',
@@ -52,15 +46,11 @@ async function bootstrapServer() {
     });
   });
 
-  await app.init();
+  const port = Number(process.env.PORT || 3000);
 
-  return serverless(expressApp);
+  await app.listen(port);
+
+  console.log(`🚀 Local Nest backend running on http://localhost:${port}`);
 }
 
-export default async function handler(req: Request, res: Response) {
-  if (!cachedServer) {
-    cachedServer = await bootstrapServer();
-  }
-
-  return cachedServer(req, res);
-}
+bootstrap();
